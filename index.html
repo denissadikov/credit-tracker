@@ -2519,84 +2519,84 @@ async function saveStateToCloud(){
 }
 
 async function onUserSignedIn(user){
-  _currentUid = user.uid;
-
-  // Показать имя в шапке
-  const badge = document.getElementById('userBadge');
-  if(badge){
-    badge.style.display = 'flex';
-    // Имя берём из displayName (задаётся при регистрации)
-    const displayName = user.displayName || user.email.split('@')[0];
-    const nm = document.getElementById('userNameBadge');
-    if(nm) nm.textContent = displayName.split(' ')[0];
-    // Скрыть аватар (у email-авторизации фото нет)
-    const img = document.getElementById('userAvatarImg');
-    if(img) img.style.display = 'none';
-    // Сохранить имя в AppState если пусто
-    if(AppState && AppState.meta && !AppState.meta.userName){
-      AppState.meta.userName = displayName.split(' ')[0];
+  // Защита от зависания — максимум 10 секунд на загрузку
+  const safetyTimer = setTimeout(()=>{
+    hideLoading();
+    if(!AppState){
+      document.getElementById('modalSetup')?.classList.add('active');
     }
-  }
+  }, 10000);
 
-  hideAuthOverlay();
-  showLoading('\u0417\u0430гружаем \u0442вои \u0434анные \u0438з \u043eблака...');
+  try {
+    _currentUid = user.uid;
 
-  const cloudState = await loadStateFromCloud(user.uid);
-  const localState = loadStateLocal();
-
-  if(cloudState){
-    // Выбираем более свежий стейт
-    if(localState && localState.meta?.lastSavedAt > cloudState.meta?.lastSavedAt){
-      AppState = localState;
-      await saveStateToCloud(); // мигрируем локальный в облако
-    } else {
-      AppState = cloudState;
+    const badge = document.getElementById('userBadge');
+    if(badge){
+      badge.style.display = 'flex';
+      const img = document.getElementById('userAvatarImg');
+      if(img) img.style.display = 'none';
+      const displayName = user.displayName || user.email.split('@')[0];
+      const nm = document.getElementById('userNameBadge');
+      if(nm) nm.textContent = displayName.split(' ')[0];
     }
-  } else if(localState){
-    AppState = localState;
-    await saveStateToCloud(); // первый раз — мигрируем в облако
-  } else {
-    AppState = null; // первый запуск
-  }
 
-  hideLoading();
+    hideAuthOverlay();
+    showLoading('Загружаем твои данные из облака...');
 
-  if(AppState){
-    afterStateReady();
-  } else {
-    document.getElementById('modalSetup').classList.add('active');
-  }
+    const cloudState = await loadStateFromCloud(user.uid);
+    const localState = loadStateLocal();
 
-  // Подписка на realtime-обновления (мультиустройство)
-  if(_unsubSnap){ _unsubSnap(); }
-  const ref = window._fbDoc(window._fbDb,'users',_currentUid);
-  _unsubSnap = window._fbOnSnap(ref,(snap)=>{
-    if(!snap.exists()) return;
-    // Только внешние изменения (не наши собственные записи)
-    if(snap.metadata.hasPendingWrites) return;
-    try{
-      const remote = JSON.parse(snap.data().state||'null');
-      if(remote && remote.meta?.lastSavedAt !== AppState?.meta?.lastSavedAt){
-        AppState = remote;
-        render();
+    if(cloudState){
+      if(localState && localState.meta?.lastSavedAt > cloudState.meta?.lastSavedAt){
+        AppState = localState;
+        await saveStateToCloud();
+      } else {
+        AppState = cloudState;
       }
-    }catch(e){}
-  });
+    } else if(localState){
+      AppState = localState;
+      await saveStateToCloud();
+    } else {
+      AppState = null;
+    }
+
+    hideLoading();
+    clearTimeout(safetyTimer);
+
+    if(AppState){
+      afterStateReady();
+    } else {
+      document.getElementById('modalSetup')?.classList.add('active');
+    }
+
+    // Realtime подписка
+    if(_unsubSnap) _unsubSnap();
+    const ref = window._fbDoc(window._fbDb, 'users', _currentUid);
+    _unsubSnap = window._fbOnSnap(ref, (snap)=>{
+      if(!snap.exists() || snap.metadata.hasPendingWrites) return;
+      try{
+        const remote = JSON.parse(snap.data().state || 'null');
+        if(remote && remote.meta?.lastSavedAt !== AppState?.meta?.lastSavedAt){
+          AppState = remote;
+          render();
+        }
+      }catch(e){}
+    });
+
+  } catch(e) {
+    console.error('onUserSignedIn error:', e);
+    clearTimeout(safetyTimer);
+    hideLoading();
+    if(!AppState) document.getElementById('modalSetup')?.classList.add('active');
+  }
 }
 
-async function initFirebaseAuth(){
+function initFirebaseAuth(){
   if(!window._fbOnAuth){
     setTimeout(initFirebaseAuth, 300);
     return;
   }
-  // Обработка возврата после редиректа на мобильном
-  try {
-    const result = await window._fbGetRedirectResult();
-    if(result && result.user){
-      // пользователь уже залогинится через onAuthStateChanged
-      showLoading('Завершаем вход...');
-    }
-  } catch(e){ console.warn('Redirect result error', e); }
+
   window._fbOnAuth(async(user)=>{
     if(user){
       await onUserSignedIn(user);

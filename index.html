@@ -827,18 +827,6 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:1300}
 .csvimp-match-row .mr-to{color:var(--text);font-weight:600}
 .csvimp-match-row .mr-to.no-match{color:var(--red-soft);font-weight:500}
 .csvimp-match-row .mr-amount{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent)}
-/* Интерактивные строки матчинга боссов */
-.csvimp-match-row2{display:grid;grid-template-columns:26px 1fr 16px 1fr 88px;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:12px;transition:opacity .2s}
-.csvimp-match-row2:last-child{border-bottom:none}
-.bm-chk-wrap{display:flex;align-items:center;justify-content:center}
-.bm-chk{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-.csvimp-match-row2 .mr-from{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-dim)}
-.csvimp-match-row2 .mr-arrow{color:var(--text-faint);text-align:center}
-.bm-sel{background:var(--surface-2);border:1px solid var(--border-bright);color:var(--text);border-radius:8px;padding:5px 8px;font-size:12px;cursor:pointer;min-width:0;transition:border-color .2s;width:100%}
-.bm-sel:focus{outline:none;border-color:var(--accent)}
-.bm-amt{background:var(--surface-2);border:1px solid var(--border-bright);color:var(--text);border-radius:8px;padding:5px 8px;font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:700;text-align:right;width:100%;min-width:0;transition:border-color .2s}
-.bm-amt:focus{outline:none;border-color:var(--accent)}
-@media(max-width:540px){.csvimp-match-row2{grid-template-columns:22px 1fr 12px 1fr 70px;gap:5px}}
 
 /* ==================== CASH FORECAST ==================== */
 .cash-forecast{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:4px}
@@ -2694,7 +2682,6 @@ let AppState = null;
 let currentEditCreditId = null;
 let currentScenario = 'minimum';
 let currentInputs = {};  // crId -> сумма в форме
-let _payFormMonth = null;  // таргетный месяц для формы платежа (переживает render)
 
 /* =================== LEVELS =================== */
 const LEVELS = [
@@ -3922,7 +3909,7 @@ function renderPaymentForm(){
   const already = AppState.paymentHistory[mk];
   const actv = activeCredits(AppState);
 
-  const selectedMonth = _payFormMonth || root.dataset.month || mk;
+  const selectedMonth = root.dataset.month || mk;
 
   // Привязка обработчиков года/месяца (общая для обоих состояний формы)
   const bindYearMonth = ()=>{
@@ -3932,7 +3919,6 @@ function renderPaymentForm(){
       const y = ySel.value;
       const m = String(mSel.value).padStart(2,'0');
       root.dataset.month = y + '-' + m;
-      _payFormMonth = y + '-' + m;
       renderPaymentForm();
     };
     if (ySel) ySel.onchange = onChange;
@@ -3955,14 +3941,12 @@ function renderPaymentForm(){
       // Восстановим платежи в currentInputs и сбросим запись — пересчитаем стейт
       undoMonthPayment(selectedMonth, /*reopen=*/true);
       root.dataset.month = selectedMonth;
-      _payFormMonth = selectedMonth;
       renderPaymentForm();
     };
     document.getElementById('deleteMonthBtn').onclick = ()=>{
       if (!confirm('Удалить платёж за ' + monthLabel(selectedMonth) + '? Балансы кредитов восстановятся.')) return;
       undoMonthPayment(selectedMonth, /*reopen=*/false);
       root.dataset.month = selectedMonth;
-      _payFormMonth = selectedMonth;
       renderPaymentForm();
     };
     return;
@@ -5803,37 +5787,10 @@ function renderCsvImportPreview(){
     <div class="csvimp-bosses-block">
       <div class="csvimp-bosses-title">⚔️ Платежи по боссам из CSV</div>
       <div class="csvimp-bosses-sub">
-        Найдено <strong>${fmtRub(totalCr)}</strong> платежей по кредитам. Отметь нужные строки, при необходимости скорректируй суммы и выбери босса вручную — затем нажми кнопку.
+        Найдено <strong>${fmtRub(totalCr)}</strong> платежей. ${hasMatch ? 'Могу подставить их в форму «Зафиксировать платёж» за выбранный месяц — см. сопоставление ниже.' : 'К сожалению, ни один платёж не сопоставлен с активными боссами — переименуй кредиты в Debit &amp; Credit или в боссах, чтобы они содержали ключевые слова («ипотека», «авто», «кредитка»).'}
       </div>
-      <div class="csvimp-match-list" id="csvBossMatchList">
-        ${(()=>{
-          const actv = activeCredits(AppState);
-          const creditOptions = actv.map(c=>`<option value="${esc(c.id)}">${esc((c.icon||'')+ ' ' +c.name)}</option>`).join('');
-          const noneOpt = '<option value="">— Не применять —</option>';
-          return match.pairs.map((p,pi)=>{
-            const selVal = p.credit ? p.credit.id : '';
-            const rowId = 'bossMatchRow_' + pi;
-            const chkId = 'bossMatchChk_' + pi;
-            const amtId = 'bossMatchAmt_' + pi;
-            const selId = 'bossMatchSel_' + pi;
-            return `<div class="csvimp-match-row2" id="${rowId}" data-pi="${pi}">
-              <label class="bm-chk-wrap" title="Включить/выключить">
-                <input type="checkbox" class="bm-chk" id="${chkId}" data-pi="${pi}" ${p.credit?'checked':''}>
-              </label>
-              <span class="mr-from" title="${esc(p.label)}">${esc(p.label)}</span>
-              <span class="mr-arrow">→</span>
-              <select class="bm-sel" id="${selId}" data-pi="${pi}">
-                ${noneOpt}${creditOptions}
-              </select>
-              <input type="number" class="bm-amt" id="${amtId}" data-pi="${pi}" value="${p.amount}" min="0" step="100" title="Сумма платежа">
-            </div>`;
-          }).join('');
-        })()}
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
-        <button class="csvimp-bosses-btn" id="csvImportFillBosses" style="flex:1;min-width:160px">⚡ Подставить отмеченные</button>
-        <span id="csvBossMatchTotal" style="font-size:12px;color:var(--text-muted)"></span>
-      </div>
+      <button class="csvimp-bosses-btn" id="csvImportFillBosses" ${hasMatch?'':'disabled'}>⚡ Заполнить платежи по боссам</button>
+      <div class="csvimp-match-list">${matchRowsHtml}</div>
     </div>` : ''}
 
     <div class="csvimp-section">
@@ -5903,106 +5860,40 @@ function renderCsvImportPreview(){
     monthSel.onchange = ()=>{ d._targetMonth = monthSel.value; };
   }
 
-  // Инициализируем select/checkbox/сумму в строках матчинга боссов
-  const matchList = document.getElementById('csvBossMatchList');
-  if (matchList){
-    const actv = activeCredits(AppState);
-    const updateBossTotal = () => {
-      let total = 0;
-      matchList.querySelectorAll('.csvimp-match-row2').forEach(row => {
-        const pi = row.dataset.pi;
-        const chk = document.getElementById('bossMatchChk_' + pi);
-        const amt = document.getElementById('bossMatchAmt_' + pi);
-        const sel = document.getElementById('bossMatchSel_' + pi);
-        if (chk && chk.checked && sel && sel.value && amt) {
-          total += Math.round(Number(amt.value) || 0);
-        }
-        // серим строку если не выбран кредит или снят чекбокс
-        if (chk && (!chk.checked || (sel && !sel.value))) {
-          row.style.opacity = '0.45';
-        } else {
-          row.style.opacity = '1';
-        }
-      });
-      const lbl = document.getElementById('csvBossMatchTotal');
-      if (lbl) lbl.textContent = total > 0 ? '∑ ' + fmtRub(total) : '';
-    };
-
-    // Устанавливаем начальные значения select
-    match.pairs.forEach((p, pi) => {
-      const sel = document.getElementById('bossMatchSel_' + pi);
-      if (sel && p.credit) sel.value = p.credit.id;
-    });
-
-    // Обработчики изменений
-    matchList.querySelectorAll('.bm-chk, .bm-sel, .bm-amt').forEach(el => {
-      el.addEventListener('change', updateBossTotal);
-      el.addEventListener('input', updateBossTotal);
-    });
-    updateBossTotal();
-  }
-
-  // Кнопка подстановки платежей по боссам — читает UI
+  // Кнопка автозаполнения платежей по боссам
   const fillBtn = document.getElementById('csvImportFillBosses');
   if (fillBtn){
-    fillBtn.onclick = ()=> fillBossesFromMatchUI();
+    fillBtn.onclick = ()=> fillBossesFromCsv();
   }
 }
 
 /* Заполнить форму «Зафиксировать платёж» суммами из CSV и переключить на нужный месяц */
 function fillBossesFromCsv(){
-  fillBossesFromMatchUI();
-}
-
-/* Читаем состояние интерактивного UI матчинга и подставляем только отмеченные строки */
-function fillBossesFromMatchUI(){
-  if (!_csvImportData){ alert('Нет данных CSV'); return; }
+  if (!_csvImportData){ alert('Нет данных'); return; }
   const d = _csvImportData;
-  const matchList = document.getElementById('csvBossMatchList');
-
-  // Собираем данные из UI строк
-  const perCredit = new Map(); // creditId → sum
-  let rowCount = 0;
-  if (matchList){
-    matchList.querySelectorAll('.csvimp-match-row2').forEach(row => {
-      const pi = row.dataset.pi;
-      const chk = document.getElementById('bossMatchChk_' + pi);
-      const amt = document.getElementById('bossMatchAmt_' + pi);
-      const sel = document.getElementById('bossMatchSel_' + pi);
-      if (!chk || !chk.checked || !sel || !sel.value || !amt) return;
-      const creditId = sel.value;
-      const amount = Math.round(Number(amt.value) || 0);
-      if (amount <= 0) return;
-      perCredit.set(creditId, (perCredit.get(creditId)||0) + amount);
-      rowCount++;
-    });
-  } else {
-    // Fallback: автоматический матчинг без UI
-    const match = matchCsvToBosses(d.creditTxns || []);
-    for (const [id, sum] of match.perCredit) perCredit.set(id, Math.round(sum));
-    rowCount = perCredit.size;
-  }
-
-  if (!perCredit.size){
-    alert('Нет отмеченных строк с выбранным боссом и суммой > 0. Отметь нужные строки.');
+  const match = matchCsvToBosses(d.creditTxns || []);
+  if (!match.perCredit.size){
+    alert('Не удалось сопоставить ни один платёж с активными боссами. Проверь названия кредитов.');
     return;
   }
-
   const targetMonth = d._targetMonth || d.dominantMonth || currentMonthKey();
+  // Если месяц уже закрыт — предупреждаем
   if (AppState.paymentHistory?.[targetMonth]){
     const ok = confirm(`Платёж за ${monthLabel(targetMonth)} уже зафиксирован. Подставить суммы в форму (потребуется сначала нажать «Редактировать»)?`);
     if (!ok) return;
   }
-
-  // Подставляем в currentInputs
+  // Заполняем currentInputs
   currentInputs = {};
-  for (const [id, sum] of perCredit){
-    currentInputs[id] = sum;
+  for (const [id, sum] of match.perCredit){
+    currentInputs[id] = Math.round(sum);
   }
+  // Переключаемся на сценарий "target" (ручной) — чтобы applyScenario не затёр значения
   currentScenario = 'target';
-  // Сохраняем targetMonth в переменную (переживёт render() который пересоздаёт DOM)
-  _payFormMonth = targetMonth;
+  // Устанавливаем таргетный месяц в форме платежа
+  const pfRoot = document.getElementById('paymentForm');
+  if (pfRoot) pfRoot.dataset.month = targetMonth;
 
+  // Закрываем модалку и переходим к форме
   document.getElementById('modalCsvImport').classList.remove('active');
   render();
   setTimeout(()=>{
@@ -6014,8 +5905,8 @@ function fillBossesFromMatchUI(){
       setTimeout(()=>{ el.style.outline = ''; el.style.outlineOffset = ''; }, 2200);
     }
   }, 300);
-  const totalSum = [...perCredit.values()].reduce((a,b)=>a+b,0);
-  showToast(`✅ Подставлено ${rowCount} платежей на сумму ${fmtRub(totalSum)} за ${monthLabel(targetMonth)}`, 'success');
+  const totalSum = [...match.perCredit.values()].reduce((a,b)=>a+b,0);
+  alert(`✅ Подставлено ${match.perCredit.size} платежей на сумму ${fmtRub(totalSum)} в форму «Зафиксировать платёж» за ${monthLabel(targetMonth)}. Проверь и нажми кнопку.`);
 }
 
 function applyCsvImport(){

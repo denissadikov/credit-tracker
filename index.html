@@ -2831,11 +2831,22 @@ function confirmDoubleReset(){
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem('ct_lastSnap');
   // Очищаем IndexedDB
-  openIDB().then(db=>{
+  const idbClean = openIDB().then(db=>{
     const tx = db.transaction([IDB_STORE, IDB_SNAPS_STORE],'readwrite');
     tx.objectStore(IDB_STORE).clear();
     tx.objectStore(IDB_SNAPS_STORE).clear();
-  }).catch(()=>{}).finally(()=>location.reload());
+  }).catch(()=>{});
+  // Очищаем Firestore — иначе после reload облако перезапишет сброс
+  const cloudClean = (()=>{
+    try {
+      if (_currentUid && window.fbDb && window.fbDoc && window.fbSetDoc) {
+        const ref = window.fbDoc(window.fbDb, 'users', _currentUid);
+        return window.fbSetDoc(ref, { state: null });
+      }
+    } catch(e){}
+    return Promise.resolve();
+  })();
+  Promise.allSettled([idbClean, cloudClean]).finally(()=>location.reload());
 }
 
 // Список снимков IndexedDB в Export-странице

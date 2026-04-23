@@ -1683,6 +1683,131 @@ body{ padding-bottom:var(--tab-h); }
   display:flex;justify-content:center;margin-bottom:28px
 }
 
+/* ==================== MOBILE ADAPTIVE FIX ==================== */
+
+/* --- Base: prevent any element from causing horizontal scroll --- */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+* { max-width: 100%; }
+img, canvas, iframe { max-width: 100%; }
+
+@media (max-width: 480px) {
+
+  /* --- Container --- */
+  .container { padding: 12px; }
+
+  /* --- Header: stack into two rows on small screens --- */
+  .app-header {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .logo { flex: 1 1 auto; min-width: 0; }
+  .logo-icon { width: 36px; height: 36px; font-size: 16px; }
+  .logo h1 { font-size: 14px; }
+  .logo-sub { font-size: 11px; }
+
+  /* Header stats: wrap gracefully, hide XP bar on very small screens */
+  .header-stats {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .xp-bar-wrap {
+    display: none; /* hidden on mobile — too wide */
+  }
+  #xpBarRow { display: none; }
+  .pill { padding: 6px 10px; font-size: 12px; }
+  #userBadge { padding: 4px 8px 4px 4px; }
+  #userBadge span { font-size: 12px; }
+
+  /* --- Hero section --- */
+  .hero { padding: 16px 8px 12px; margin-bottom: 16px; }
+  .hero h2 { font-size: clamp(26px, 7vw, 36px); }
+  .hero-sub { font-size: 14px; }
+
+  /* --- KPI grid: single column --- */
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .kpi-card { padding: 14px; }
+  .kpi-value { font-size: clamp(18px, 5vw, 24px); }
+  .kpi-icon { width: 32px; height: 32px; font-size: 16px; margin-bottom: 8px; }
+
+  /* --- Scenario pills: wrap --- */
+  .scenario-pills { gap: 6px; }
+  .scenario-pill { padding: 8px 14px; font-size: 13px; }
+
+  /* --- Credits list --- */
+  .credit-row { grid-template-columns: auto 1fr auto; gap: 10px; padding: 12px; }
+  .credit-balance { font-size: 16px; }
+
+  /* --- Payment form --- */
+  .payment-top { flex-direction: column; gap: 10px; }
+  .payment-top .field { min-width: unset; width: 100%; }
+  .scenario-tabs { grid-template-columns: 1fr; gap: 8px; }
+  .scenario-btn { padding: 12px; }
+
+  /* --- Payment history table: scroll container, don't overflow page --- */
+  .history-scroll { overflow-x: auto; max-width: 100%; }
+  .history-table { min-width: 480px; }
+
+  /* --- Budget --- */
+  .budget-grid { grid-template-columns: 1fr; }
+  .budget-row { grid-template-columns: 1fr 1fr auto; }
+
+  /* --- Analytics: cash-flow table already has overflow-x:auto, fix min-width --- */
+  .cf-table-wrap { overflow-x: auto; max-width: 100%; }
+
+  /* --- Boss card --- */
+  .boss-header { gap: 8px; }
+  .boss-title { font-size: 16px; }
+
+  /* --- Modal --- */
+  .modal { padding: 20px 16px; }
+  .modal-lg { max-width: 100%; }
+
+  /* --- Bottom nav (если есть) --- */
+  .bottom-nav { padding: 0 4px; }
+  .bottom-nav-btn { font-size: 10px; padding: 8px 4px; }
+
+  /* --- Quests --- */
+  .quest-item { padding: 12px; }
+
+  /* --- Profile stats grid --- */
+  .player-stats-grid { grid-template-columns: 1fr 1fr !important; }
+
+  /* --- Settings menu --- */
+  .settings-menu { right: 0; left: auto; min-width: 220px; max-width: calc(100vw - 24px); }
+
+  /* --- Auth overlay form --- */
+  #authOverlay { padding: 16px; }
+  #authOverlay > div:first-child { margin-bottom: 20px; }
+  #authOverlay input { font-size: 16px !important; } /* prevent iOS zoom on focus */
+  #authSubmitBtn { font-size: 16px !important; }
+
+  /* --- Charts: limit height on mobile --- */
+  .stats-canvas-wrap { height: 220px; }
+  #btChart, #cfChart { max-height: 220px; }
+
+  /* --- Misc --- */
+  .reco-summary > div { min-width: unset; flex: 1 1 45%; }
+  .whatif-slider { min-width: unset; }
+  .whatif-val { min-width: 80px; font-size: 14px; }
+}
+
+/* Medium mobile: 481–640px */
+@media (min-width: 481px) and (max-width: 640px) {
+  .container { padding: 16px; }
+  .app-header { padding: 10px 14px; }
+  .xp-bar-wrap { min-width: 80px; }
+  .xp-bar-track { min-width: 40px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  #authOverlay input { font-size: 16px !important; }
+}
+
 </style>
 
 <script type="module">

@@ -2288,6 +2288,39 @@ input:focus, select:focus, textarea:focus {
   -webkit-backdrop-filter: saturate(180%) blur(28px) !important;
 }
 
+/* Только светлая тема */
+:root { color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #f2f2f7;
+    --bg-1: #ffffff;
+    --bg-2: #f2f2f7;
+    --surface: #ffffff;
+    --surface-2: #f2f2f7;
+    --surface-3: #e5e5ea;
+    --border: rgba(60, 60, 67, 0.13);
+    --border-bright: rgba(60, 60, 67, 0.22);
+    --text: #000000;
+    --text-dim: rgba(60, 60, 67, 0.85);
+    --text-muted: rgba(60, 60, 67, 0.55);
+    --text-faint: rgba(60, 60, 67, 0.25);
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-bg-strong: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* Нижнее меню по ширине основной секции */
+body { padding-bottom: calc(var(--tab-h) + 16px); }
+.bottom-nav {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%);
+  width: min(1120px, calc(100% - 24px));
+  border-radius: 14px 14px 0 0 !important;
+  bottom: 8px;
+}
+
 /* Финальный микротюнинг: спокойная iOS-навигация */
 .app-header {
   min-height: 52px;
@@ -2340,7 +2373,6 @@ input:focus, select:focus, textarea:focus {
   height: 4px !important;
 }
 
-#themeToggleBtn,
 #settingsBtn,
 #pwaInstallBtn {
   height: 30px;
@@ -2348,7 +2380,6 @@ input:focus, select:focus, textarea:focus {
   border-radius: 9px !important;
   padding: 0 10px !important;
 }
-#themeToggleBtn,
 #settingsBtn {
   width: 30px;
   min-width: 30px;
@@ -2377,6 +2408,44 @@ input:focus, select:focus, textarea:focus {
   .header-stats {
     gap: 4px !important;
   }
+}
+
+/* Формы, иконки, тени как в macOS Settings */
+.kpi-card,
+.credit-row,
+.pay-credit-row,
+.reco-item,
+.boss-card,
+.strategy-card,
+.achievement,
+.settings-menu {
+  background: #ffffff !important;
+  border: 1px solid rgba(60, 60, 67, 0.10) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+}
+.kpi-icon,
+.pay-cr-ico,
+.boss-emoji,
+.bnav-tab .bnav-ico,
+.icon-btn {
+  color: #6e6e73 !important;
+  filter: grayscale(1);
+}
+.kpi-icon,
+.pay-cr-ico,
+.icon-btn {
+  background: #f2f2f7 !important;
+  border: 1px solid rgba(60, 60, 67, 0.12) !important;
+  border-radius: 8px !important;
+}
+input, select, textarea {
+  background: #f2f2f7 !important;
+  border: 1px solid rgba(60, 60, 67, 0.12) !important;
+  box-shadow: none !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(var(--accent-rgb), 0.35) !important;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16) !important;
 }
 
 </style>
@@ -2562,7 +2631,6 @@ input:focus, select:focus, textarea:focus {
       </div>
       <span class="pill pill-streak" id="streakValue">🔥 0 мес</span>
       <button class="pwa-install-btn" id="pwaInstallBtn" style="display:none" title="Установить как приложение">📲 Установить</button>
-      <button class="btn btn-ghost btn-sm" id="themeToggleBtn" title="Сменить тему" style="padding:8px 12px">☀️</button>
       <div id="userBadge">
         <img id="userAvatarImg" width="26" height="26" src="" alt="">
         <span id="userInitial" class="user-initial"></span>
@@ -6773,7 +6841,6 @@ function applyCsvImport(){
 
 /* =================== SETUP =================== */
 function init(){
-  initTheme();
   if(typeof initBottomNav === 'function') initBottomNav();
   showLoading('Инициализация...');
   initFirebaseAuth();
@@ -6847,11 +6914,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   catch(e){
     alert('⚠️ localStorage недоступен! Данные НЕ будут сохраняться между сессиями. Используй JSON-экспорт для ручного сохранения.');
   }
-
-  // ---- Тема ----
-  initTheme();
-  const themeBtn = document.getElementById('themeToggleBtn');
-  if (themeBtn) themeBtn.onclick = ()=>toggleTheme();
 
   // ---- PWA ----
   initPwa();
@@ -7007,7 +7069,6 @@ window.openQuickPay = openQuickPay;
 window.closeQuickPay = closeQuickPay;
 window.openClassSelection = openClassSelection;
 window.closeClassSelection = closeClassSelection;
-window.toggleTheme = toggleTheme;
 
 /* =================== СТАТИСТИКА =================== */
 const STATS_PALETTE = [
@@ -7272,34 +7333,6 @@ function updatePaymentBadge(){
   }
 }
 window.navigateTo = navigateTo;
-
-/* =================== ТЕМА =================== */
-function initTheme(){
-  const saved = localStorage.getItem('ct_theme') || 'dark';
-  applyTheme(saved);
-}
-function applyTheme(theme){
-  const btn = document.getElementById('themeToggleBtn');
-  if (theme === 'light'){
-    document.documentElement.classList.add('light-mode');
-    if (btn) btn.textContent = '🌙';
-  } else {
-    document.documentElement.classList.remove('light-mode');
-    if (btn) btn.textContent = '☀️';
-  }
-  localStorage.setItem('ct_theme', theme);
-}
-function toggleTheme(){
-  const cur = localStorage.getItem('ct_theme') || 'dark';
-  applyTheme(cur === 'dark' ? 'light' : 'dark');
-  // Перерисовать графики с новыми цветами
-  setTimeout(()=>{
-    if (typeof renderCharts === 'function') renderCharts();
-    if (typeof renderCashForecast === 'function') renderCashForecast();
-    if (typeof renderBalanceTimeline === 'function') renderBalanceTimeline();
-    if (typeof renderBalanceHistoryChart === 'function') renderBalanceHistoryChart();
-  }, 80);
-}
 
 /* =================== КЛАССЫ ПЕРСОНАЖА =================== */
 const CHARACTER_CLASSES = {

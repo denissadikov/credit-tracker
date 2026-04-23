@@ -2694,6 +2694,7 @@ let AppState = null;
 let currentEditCreditId = null;
 let currentScenario = 'minimum';
 let currentInputs = {};  // crId -> сумма в форме
+let _payFormMonth = null;  // таргетный месяц для формы платежа (переживает render)
 
 /* =================== LEVELS =================== */
 const LEVELS = [
@@ -3921,7 +3922,7 @@ function renderPaymentForm(){
   const already = AppState.paymentHistory[mk];
   const actv = activeCredits(AppState);
 
-  const selectedMonth = root.dataset.month || mk;
+  const selectedMonth = _payFormMonth || root.dataset.month || mk;
 
   // Привязка обработчиков года/месяца (общая для обоих состояний формы)
   const bindYearMonth = ()=>{
@@ -3931,6 +3932,7 @@ function renderPaymentForm(){
       const y = ySel.value;
       const m = String(mSel.value).padStart(2,'0');
       root.dataset.month = y + '-' + m;
+      _payFormMonth = y + '-' + m;
       renderPaymentForm();
     };
     if (ySel) ySel.onchange = onChange;
@@ -3953,12 +3955,14 @@ function renderPaymentForm(){
       // Восстановим платежи в currentInputs и сбросим запись — пересчитаем стейт
       undoMonthPayment(selectedMonth, /*reopen=*/true);
       root.dataset.month = selectedMonth;
+      _payFormMonth = selectedMonth;
       renderPaymentForm();
     };
     document.getElementById('deleteMonthBtn').onclick = ()=>{
       if (!confirm('Удалить платёж за ' + monthLabel(selectedMonth) + '? Балансы кредитов восстановятся.')) return;
       undoMonthPayment(selectedMonth, /*reopen=*/false);
       root.dataset.month = selectedMonth;
+      _payFormMonth = selectedMonth;
       renderPaymentForm();
     };
     return;
@@ -5996,8 +6000,8 @@ function fillBossesFromMatchUI(){
     currentInputs[id] = sum;
   }
   currentScenario = 'target';
-  const pfRoot = document.getElementById('paymentForm');
-  if (pfRoot) pfRoot.dataset.month = targetMonth;
+  // Сохраняем targetMonth в переменную (переживёт render() который пересоздаёт DOM)
+  _payFormMonth = targetMonth;
 
   document.getElementById('modalCsvImport').classList.remove('active');
   render();

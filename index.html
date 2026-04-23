@@ -882,12 +882,12 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:1300}
 
 /* ==================== LIGHT MODE ==================== */
 .light-mode{
-  --bg:#f5f4f0;
-  --bg-1:#eeece8;
-  --bg-2:#e8e6e1;
+  --bg:#f0eeea;
+  --bg-1:#ffffff;
+  --bg-2:#f5f4f1;
   --surface:#ffffff;
-  --surface-2:#f7f6f3;
-  --surface-3:#eeece8;
+  --surface-2:#f3f2ef;
+  --surface-3:#eceae6;
   --border:rgba(0,0,0,0.08);
   --border-bright:rgba(0,0,0,0.14);
   --text:#1a1a2e;
@@ -1707,12 +1707,20 @@ img, canvas, iframe { max-width: 100%; }
     margin-bottom: 16px;
     overflow: visible; /* let settings-menu escape */
   }
-  /* Logo: hard clip so text never bleeds into controls */
-  .logo { flex: 0 1 auto; min-width: 0; max-width: 42%; overflow: hidden; }
-  .logo-text { overflow: hidden; min-width: 0; max-width: 100%; }
+  /* Logo: сокращаем до 'ФС' на мобиле */
+  .logo { flex: 0 0 auto; min-width: 0; overflow: visible; }
   .logo-icon { width: 28px; height: 28px; font-size: 13px; flex-shrink: 0; }
-  .logo h1 { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .logo-sub { display: none; } /* hide subtitle on tiny screens */
+  .logo-text { display: none; } /* скрываем полный текст */
+  /* 'ФС' как псевдоэлемент */
+  .logo::after {
+    content: 'ФС';
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .logo-sub { display: none; }
 
   /* Header-stats: single row, right-aligned, no wrap */
   .header-stats {
@@ -1734,9 +1742,10 @@ img, canvas, iframe { max-width: 100%; }
   #levelBadge { display: none !important; }
   /* Pills: compact */
   .pill { padding: 4px 7px; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
-  /* User badge: compact */
-  #userBadge { padding: 3px 6px 3px 3px; flex-shrink: 0; white-space: nowrap; }
-  #userBadge span { font-size: 11px; }
+  /* User badge: квадратная кнопка 40×40 на мобиле — только аватар */
+  #userBadge { width:40px; height:40px; padding:0; border-radius:10px; justify-content:center; flex-shrink:0; }
+  #userNameBadge { display: none !important; } /* имя скрыто, видно в tooltip при hover */
+  #userBadge > button { display: none !important; } /* крестик выхода — выходить через меню настроек */
 
   /* --- Hero section --- */
   .hero { padding: 16px 8px 12px; margin-bottom: 16px; }
@@ -2015,17 +2024,18 @@ img, canvas, iframe { max-width: 100%; }
       <button class="pwa-install-btn" id="pwaInstallBtn" style="display:none" title="Установить как приложение">📲 Установить</button>
       <button class="btn btn-ghost btn-sm" id="themeToggleBtn" title="Сменить тему" style="padding:8px 12px">☀️</button>
       <div id="userBadge" style="
-        display:none;align-items:center;gap:8px;
-        background:var(--surface-2);border:1px solid var(--border);
-        border-radius:20px;padding:4px 12px 4px 4px;cursor:default;
+        display:none;align-items:center;gap:6px;
+        background:var(--surface-2);border:1px solid var(--border-bright);
+        border-radius:10px;padding:0 10px 0 6px;
+        height:40px;cursor:default;
       ">
         <img id="userAvatarImg" width="26" height="26"
-             style="border-radius:50%;display:block" src="" alt="">
+             style="border-radius:7px;display:block;flex-shrink:0" src="" alt="">
         <span id="userNameBadge"
-              style="font-size:13px;font-weight:600;color:var(--text)"></span>
+              style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap"></span>
         <button onclick="handleSignOut()" style="
           background:none;border:none;color:var(--text-muted);
-          cursor:pointer;font-size:18px;line-height:1;padding:0 2px;
+          cursor:pointer;font-size:16px;line-height:1;padding:0;margin-left:2px;
         " title="Выйти из аккаунта">×</button>
       </div>
 
@@ -2043,6 +2053,8 @@ img, canvas, iframe { max-width: 100%; }
           <div class="divider"></div>
           <button data-act="loadDemo">🎮 Загрузить мои кредиты (Бумеранг)</button>
           <button data-act="reset">⚠️ Сбросить всё</button>
+          <div class="divider"></div>
+          <button data-act="signout">🚪 Выйти из аккаунта</button>
         </div>
       </div>
     </div>
@@ -6191,6 +6203,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
     if (act==='reset') confirmDoubleReset();
     if (act==='chooseClass') openClassSelection();
+    if (act==='signout') handleSignOut();
   });
 
   // ---- Классы персонажа: выбор карточки ----

@@ -2217,6 +2217,168 @@ input:focus, select:focus, textarea:focus {
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* Финальная фиксация Liquid Glass в шапке и LVL */
+.container {
+  max-width: 1120px;
+  padding-top: 0 !important;
+}
+.app-header {
+  width: calc(100% + 32px);
+  margin: 0 -16px 10px !important;
+  background: color-mix(in srgb, var(--glass-bg) 88%, transparent) !important;
+  backdrop-filter: saturate(180%) blur(30px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(30px) !important;
+  box-shadow: 0 0.5px 0 var(--border), 0 1px 0 rgba(255,255,255,0.28) inset !important;
+  overflow: hidden;
+}
+.app-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.06) 38%, transparent 80%);
+}
+.app-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.06);
+}
+.app-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pill-lvl,
+#levelBadge {
+  background: rgba(var(--accent-rgb), 0.10) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.20) !important;
+  box-shadow: none !important;
+}
+.pill-lvl .pill-label,
+#levelBadge .pill-label,
+.pill-lvl .pill-val,
+#levelBadge .pill-val {
+  color: var(--accent) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+.xp-bar-wrap,
+.settings-menu,
+.save-status,
+.bottom-nav {
+  background: color-mix(in srgb, var(--glass-bg-strong) 82%, transparent) !important;
+  backdrop-filter: saturate(180%) blur(28px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(28px) !important;
+}
+
+.bnav-tab .bnav-ico,
+.bnav-tab.active .bnav-ico {
+  transform: none !important;
+}
+
+.light-mode .app-header,
+.light-mode .bottom-nav,
+.light-mode .settings-menu {
+  background: color-mix(in srgb, var(--glass-bg-strong) 82%, transparent) !important;
+  backdrop-filter: saturate(180%) blur(28px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(28px) !important;
+}
+
+/* Финальный микротюнинг: спокойная iOS-навигация */
+.app-header {
+  min-height: 52px;
+}
+.logo {
+  gap: 10px;
+  min-width: 0;
+}
+.logo-text h1 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.logo-sub {
+  font-size: 11px !important;
+  opacity: 0.9;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+  min-width: 0;
+}
+.pill,
+#levelBadge,
+#streakValue {
+  height: 28px;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  line-height: 1;
+}
+#streakValue {
+  background: rgba(255, 149, 0, 0.10) !important;
+  border: 1px solid rgba(255, 149, 0, 0.22) !important;
+  color: var(--amber) !important;
+}
+
+.xp-bar-wrap {
+  min-width: 120px !important;
+  max-width: 170px;
+  padding: 4px 8px !important;
+  gap: 6px !important;
+}
+.xp-bar-label {
+  font-size: 10px !important;
+}
+.xp-bar-track {
+  height: 4px !important;
+}
+
+#themeToggleBtn,
+#settingsBtn,
+#pwaInstallBtn {
+  height: 30px;
+  min-height: 30px;
+  border-radius: 9px !important;
+  padding: 0 10px !important;
+}
+#themeToggleBtn,
+#settingsBtn {
+  width: 30px;
+  min-width: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 1100px) {
+  .xp-bar-wrap {
+    max-width: 140px;
+    min-width: 100px !important;
+  }
+  #streakValue {
+    display: none !important;
+  }
+}
+@media (max-width: 860px) {
+  .app-header {
+    padding: 0 12px !important;
+  }
+  .logo-sub,
+  .xp-bar-wrap {
+    display: none !important;
+  }
+  .header-stats {
+    gap: 4px !important;
+  }
+}
+
 </style>
 
 <script type="module">

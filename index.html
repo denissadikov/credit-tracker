@@ -1003,6 +1003,7 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:1300}
   position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);
   display:none;align-items:center;justify-content:center;
   z-index:1500;padding:20px;
+  overflow-y:auto;
   animation:fade-in 0.3s;
 }
 .class-selection-overlay.active{display:flex}
@@ -1011,11 +1012,26 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:1300}
   border-radius:var(--radius-lg);padding:32px;max-width:700px;width:100%;
   box-shadow:0 30px 80px rgba(0,0,0,0.7);
   text-align:center;
+  max-height:90vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 .class-panel h2{font-size:24px;font-weight:800;margin-bottom:8px;letter-spacing:-0.02em}
 .class-panel .class-sub{color:var(--text-muted);font-size:14px;margin-bottom:28px}
 .class-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
-@media(max-width:600px){.class-cards{grid-template-columns:1fr}}
+@media(max-width:600px){
+  .class-selection-overlay{align-items:flex-start;padding:12px}
+  .class-panel{padding:20px 14px;max-height:calc(100dvh - 24px)}
+  .class-panel h2{font-size:18px;margin-bottom:6px}
+  .class-panel .class-sub{font-size:12px;margin-bottom:14px}
+  /* Три колонки на мобиле — компактные карточки */
+  .class-cards{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .class-card{padding:12px 6px}
+  .class-icon{font-size:26px;margin-bottom:6px}
+  .class-name{font-size:12px;margin-bottom:2px}
+  .class-bonus{font-size:10px}
+  .class-badge{font-size:9px;padding:2px 7px;margin-top:5px}
+}
 .class-card{
   padding:20px 14px;border:2px solid var(--border-bright);
   border-radius:var(--radius);cursor:pointer;transition:var(--t);
@@ -1739,10 +1755,12 @@ img, canvas, iframe { max-width: 100%; }
   #levelBadge { display: none !important; }
   /* Pills: compact */
   .pill { padding: 4px 7px; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
-  /* User badge: квадратная кнопка 40×40 на мобиле — только аватар */
+  /* User badge: квадратная кнопка 40×40 на мобиле — инициал */
   #userBadge { width:40px; height:40px; padding:0; border-radius:10px; justify-content:center; flex-shrink:0; }
-  #userNameBadge { display: none !important; } /* имя скрыто, видно в tooltip при hover */
-  #userBadge > button { display: none !important; } /* крестик выхода — выходить через меню настроек */
+  #userNameBadge { display: none !important; }
+  #userBadge > button { display: none !important; }
+  /* Инициал через псевдоэлемент на .user-initial внутри бейджа */
+  #userBadge #userInitial { display:flex !important; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; background:linear-gradient(135deg,var(--accent),var(--primary)); color:#fff; font-size:13px; font-weight:700; flex-shrink:0; }
 
   /* --- Hero section --- */
   .hero { padding: 16px 8px 12px; margin-bottom: 16px; }
@@ -1798,7 +1816,7 @@ img, canvas, iframe { max-width: 100%; }
   /* --- Profile stats grid --- */
   .player-stats-grid { grid-template-columns: 1fr 1fr !important; }
 
-  /* --- Settings menu: anchor to viewport RIGHT edge, never overflow left --- */
+  /* --- Settings menu: поверх всего включая bottom-nav --- */
   .settings-dropdown { position: static; }
   .settings-menu {
     position: fixed;
@@ -1808,6 +1826,10 @@ img, canvas, iframe { max-width: 100%; }
     min-width: 220px;
     max-width: calc(100vw - 20px);
     z-index: 9999;
+    /* скролл если не влезает над bottom-nav */
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* --- Auth overlay form --- */
@@ -2027,7 +2049,8 @@ img, canvas, iframe { max-width: 100%; }
         height:40px;cursor:default;
       ">
         <img id="userAvatarImg" width="26" height="26"
-             style="border-radius:7px;display:block;flex-shrink:0" src="" alt="">
+             style="border-radius:7px;display:none;flex-shrink:0" src="" alt="">
+        <span id="userInitial" style="display:none"></span>
         <span id="userNameBadge"
               style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap"></span>
         <button onclick="handleSignOut()" style="
@@ -2689,11 +2712,17 @@ async function onUserSignedIn(user){
     const badge = document.getElementById('userBadge');
     if(badge){
       badge.style.display = 'flex';
+      const displayName = user.displayName || user.email.split('@')[0];
+      const firstWord = displayName.split(' ')[0];
+      // Инициал (для мобильного вида)
+      const initEl = document.getElementById('userInitial');
+      if(initEl){ initEl.textContent = firstWord.charAt(0).toUpperCase(); initEl.style.display = 'flex'; }
+      // Аватар скрыт (email-авт. не даёт фото)
       const img = document.getElementById('userAvatarImg');
       if(img) img.style.display = 'none';
-      const displayName = user.displayName || user.email.split('@')[0];
+      // Имя (показывается на десктопе)
       const nm = document.getElementById('userNameBadge');
-      if(nm) nm.textContent = displayName.split(' ')[0];
+      if(nm) nm.textContent = firstWord;
     }
 
     hideAuthOverlay();

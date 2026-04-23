@@ -2418,8 +2418,8 @@ function authSwitchTab(mode){
 
   document.getElementById('authSubmitBtn').textContent = isReg ? 'Создать аккаунт' : 'Войти';
   document.getElementById('authSwitchHint').innerHTML = isReg
-    ? 'Уже есть аккаунт? <span onclick="authSwitchTab('login')" style="color:var(--accent);cursor:pointer;font-weight:600">Войти</span>'
-    : 'Нет аккаунта? <span onclick="authSwitchTab('register')" style="color:var(--accent);cursor:pointer;font-weight:600">Зарегистрироваться</span>';
+    ? 'Уже есть аккаунт? <span onclick="authSwitchTab(\x27login\x27)" style="color:var(--accent);cursor:pointer;font-weight:600">Войти</span>'
+    : 'Нет аккаунта? <span onclick="authSwitchTab(\x27register\x27)" style="color:var(--accent);cursor:pointer;font-weight:600">Зарегистрироваться</span>';
 
   const err = document.getElementById('authError');
   if(err) err.style.display = 'none';
@@ -2488,8 +2488,7 @@ document.addEventListener('keydown', function(e){
 });
 
 async function handleSignOut(){
-  if(!confirm('Выйти из аккаунта?
-Данные сохранены в облаке.')) return;
+  if(!confirm('Выйти из аккаунта?\nДанные сохранены в облаке.')) return;
   if(_unsubSnap){ _unsubSnap(); _unsubSnap=null; }
   _currentUid = null;
   AppState    = null;

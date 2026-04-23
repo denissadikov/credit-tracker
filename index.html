@@ -1698,32 +1698,45 @@ img, canvas, iframe { max-width: 100%; }
   /* --- Container --- */
   .container { padding: 12px; }
 
-  /* --- Header: stack into two rows on small screens --- */
+  /* --- Header: ONE row — logo left, controls right, no wrap --- */
   .app-header {
-    flex-wrap: wrap;
-    padding: 10px 12px;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .logo { flex: 1 1 auto; min-width: 0; }
-  .logo-icon { width: 36px; height: 36px; font-size: 16px; }
-  .logo h1 { font-size: 14px; }
-  .logo-sub { font-size: 11px; }
-
-  /* Header stats: wrap gracefully, hide XP bar on very small screens */
-  .header-stats {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+    padding: 8px 10px;
     gap: 6px;
-    width: 100%;
-    justify-content: flex-start;
+    margin-bottom: 16px;
+    overflow: visible; /* let settings-menu escape */
   }
-  .xp-bar-wrap {
-    display: none; /* hidden on mobile — too wide */
+  /* Logo: hard clip so text never bleeds into controls */
+  .logo { flex: 0 1 auto; min-width: 0; max-width: 42%; overflow: hidden; }
+  .logo-text { overflow: hidden; min-width: 0; max-width: 100%; }
+  .logo-icon { width: 28px; height: 28px; font-size: 13px; flex-shrink: 0; }
+  .logo h1 { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .logo-sub { display: none; } /* hide subtitle on tiny screens */
+
+  /* Header-stats: single row, right-aligned, no wrap */
+  .header-stats {
+    flex-wrap: nowrap;
+    gap: 4px;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
+    overflow: visible;
   }
-  #xpBarRow { display: none; }
-  .pill { padding: 6px 10px; font-size: 12px; }
-  #userBadge { padding: 4px 8px 4px 4px; }
-  #userBadge span { font-size: 12px; }
+  /* XP bar: completely hidden on mobile — use !important to beat JS inline styles */
+  .xp-bar-wrap,
+  #xpBarWrap {
+    display: none !important;
+  }
+  #xpBarRow { display: none !important; }
+  /* LVL pill: hidden on mobile (saves space, redundant with profile tab) */
+  #levelBadge { display: none !important; }
+  /* Pills: compact */
+  .pill { padding: 4px 7px; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+  /* User badge: compact */
+  #userBadge { padding: 3px 6px 3px 3px; flex-shrink: 0; white-space: nowrap; }
+  #userBadge span { font-size: 11px; }
 
   /* --- Hero section --- */
   .hero { padding: 16px 8px 12px; margin-bottom: 16px; }
@@ -1779,8 +1792,17 @@ img, canvas, iframe { max-width: 100%; }
   /* --- Profile stats grid --- */
   .player-stats-grid { grid-template-columns: 1fr 1fr !important; }
 
-  /* --- Settings menu --- */
-  .settings-menu { right: 0; left: auto; min-width: 220px; max-width: calc(100vw - 24px); }
+  /* --- Settings menu: anchor to viewport RIGHT edge, never overflow left --- */
+  .settings-dropdown { position: static; }
+  .settings-menu {
+    position: fixed;
+    top: auto;
+    right: 10px;
+    left: auto;
+    min-width: 220px;
+    max-width: calc(100vw - 20px);
+    z-index: 9999;
+  }
 
   /* --- Auth overlay form --- */
   #authOverlay { padding: 16px; }
@@ -6142,7 +6164,14 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // Settings dropdown
   const menu = document.getElementById('settingsMenu');
-  document.getElementById('settingsBtn').onclick = e=>{ e.stopPropagation(); menu.classList.toggle('active'); };
+  document.getElementById('settingsBtn').onclick = e=>{
+    e.stopPropagation();
+    // Position fixed menu below the button (works on mobile where position:fixed is used)
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 8) + 'px';
+    menu.classList.toggle('active');
+  };
   document.addEventListener('click', e=>{
     if (!menu.contains(e.target) && e.target.id!=='settingsBtn') menu.classList.remove('active');
   });
